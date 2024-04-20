@@ -90,7 +90,7 @@
                             <input v-model="fio" class="inputname" type="text" name="name" placeholder="Аты-жөніңіз">
                             <span class="spanzay">Той иелеріне тілегіңіз:</span>
                             <textarea v-model="greet" name="tilek" class="inputtilek" placeholder="Тілегіңізді осында жазыңыз"></textarea>
-                            <button :disabled="isEmpty()" @click="sendShit()" class="zayotrp">Жіберу</button>
+                            <button :disabled="isEmpty() || isLoading" @click="sendShit()" class="zayotrp">Жіберу</button>
                         </div>
                     </div>
                 </div>
@@ -114,7 +114,8 @@ export default{
     data(){
         return{
             greet:'',
-            fio:''
+            fio:'',
+            isLoading: false,
         }
     },
     methods:{
@@ -133,34 +134,37 @@ export default{
 
         this.sendMessage(payload)
       },
-        sendMessage(payload) {
+        async sendMessage(payload) {
           const chatIds = ['379532768', '538853897', '6784238632'];
           const message = payload;
           const telegramBotToken = '7080378136:AAEY1NMOUW6FEIUbc3DYuQLFVcyyRsoE0-U';
           const url = `https://api.telegram.org/bot${telegramBotToken}/sendMessage`;
 
-          chatIds.forEach(chatId => {
-            axios.post(url, {
-              chat_id: chatId,
-              text: message,
-            })
-                .then(response => {
-                  // console.log('Message sent successfully:', response.data);
-                })
-                .catch(error => {
-                  // console.error('Error sending message:', error);
-                });
-          });
-            // let  = document.querySelector('input[name="zhauap"]:checked').value;
-            document.getElementsByClassName('inputname')[0].value = ''
-            document.getElementsByClassName('inputtilek')[0].value = ''
-            this.$bvToast.toast('Ақпарат той иелеріне жіберілді!', {
-                title: 'Хабарлама!',
-                noAutohide:true,
-                appendToast: true,
-                variant:'success',
-                solid:true,
-            })
+          try {
+            this.isLoading = true;
+
+            for (const chatId of chatIds) {
+              await axios.post(url, {
+                chat_id: chatId,
+                text: message,
+              });
+            }
+          } catch (error) {
+            console.error('Error sending message:', error);
+          } finally {
+            this.isLoading = false;
+          }
+
+          // let  = document.querySelector('input[name="zhauap"]:checked').value;
+          document.getElementsByClassName('inputname')[0].value = ''
+          document.getElementsByClassName('inputtilek')[0].value = ''
+          this.$bvToast.toast('Ақпарат той иелеріне жіберілді!', {
+              title: 'Хабарлама!',
+              noAutohide:true,
+              appendToast: true,
+              variant:'success',
+              solid:true,
+          })
         },
         // },
     },
